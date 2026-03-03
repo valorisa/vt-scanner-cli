@@ -1,47 +1,249 @@
-﻿# 🛡️ VirusTotal Scanner CLI
+# 🛡️ VirusTotal Scanner CLI
 
 Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de commande PowerShell.
+
+---
+
+## 📋 Table des Matières
+
+- [Description](#description)
+- [Fonctionnalités](#fonctionnalités)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Utilisation](#utilisation)
+- [Limites API](#limites-api)
+- [Dépannage](#dépannage)
+- [Licence](#licence)
+- [Liens Utiles](#liens-utiles)
+
+---
+
+## 📖 Description
+
+**VirusTotal Scanner CLI** est un outil en ligne de commande PowerShell permettant d'analyser rapidement des fichiers, dossiers et URLs via l'API VirusTotal v3. Idéal pour les administrateurs système, analystes sécurité et utilisateurs avancés.
+
+---
 
 ## ✨ Fonctionnalités
 
 | Option | Description |
 |--------|-------------|
-| **1** | Scanner un fichier (hash + upload optionnel) |
+| **1** | Scanner un fichier (vérification cache + upload si nécessaire) |
 | **2** | Scanner un dossier (récursif, max 10 fichiers) |
 | **3** | Scanner une URL (HTTPS recommandé) |
-| **4** | Scanner via hash SHA256 |
+| **4** | Scanner via hash SHA256 (sans upload) |
 | **5** | Configurer clé API |
 | **0** | Quitter |
 
+---
+
 ## 🖥️ Prérequis
 
-- **PowerShell** 5.1+
-- **Clé API VirusTotal** (gratuite)
-- **Connexion Internet**
-
-## 🚀 Utilisation
-
-```powershell
-.\vt-scanner.ps1
-
-📄 Licence
-Usage personnel et éducatif.
-
-🔗 Liens
-VirusTotal API : https://developers.virustotal.com/reference?spm=a2ty_o01.29997173.0.0.95695171LocGLs
-Obtenir une clé API : https://www.virustotal.com/gui/my-apikey?spm=a2ty_o01.29997173.0.0.95695171LocGLs
-
+| Requis | Version | Vérification |
+|--------|---------|--------------|
+| **PowerShell** | 5.1+ | `$PSVersionTable.PSVersion` |
+| **Clé API VirusTotal** | Gratuite | [virustotal.com](https://www.virustotal.com/gui/my-apikey) |
+| **Connexion Internet** | Requise | - |
 
 ---
 
-### 3. **Vérifier le Script Final**
+## 📥 Installation
 
-⚠️ **Important** : Assurez-vous que `vt-scanner.ps1` contient les corrections :
+### 1. Cloner le dépôt
 
 ```powershell
-# Vérifier qu'il n'y a pas d'espaces dans l'URL
-(Get-Content vt-scanner.ps1 | Select-String "BaseUrl").Trim()
+git clone https://github.com/valorisa/vt-scanner-cli.git
+cd vt-scanner-cli
+```
 
-# Doit afficher : $script:BaseUrl = "https://www.virustotal.com/api/v3"
-# ET NON : "https://www.virustotal.com/api/v3  "
+### 2. Débloquer l'exécution (si nécessaire)
 
+```powershell
+# Débloquer le script (une seule fois)
+Unblock-File -Path ".\vt-scanner.ps1"
+
+# Ou autoriser l'exécution des scripts
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+---
+
+## 🔑 Configuration
+
+### Obtenir une clé API
+
+1. Rendez-vous sur [https://www.virustotal.com/gui/my-apikey](https://www.virustotal.com/gui/my-apikey)
+2. Connectez-vous ou créez un compte gratuit
+3. Copiez votre clé API
+
+### Limites du compte gratuit
+
+| Type | Limite | Reset |
+|------|--------|-------|
+| Fichiers/jour | 4 uploads | 24h |
+| URLs/minute | 4 scans | 1min |
+| Requêtes/minute | 60 | 1min |
+
+---
+
+## 🚀 Utilisation
+
+### Lancement
+
+```powershell
+.\vt-scanner.ps1
+```
+
+### Menu Principal
+
+```
+=== VirusTotal Scanner CLI (PS5.1+) ===
+1. Scanner un fichier (hash + upload optionnel)
+2. Scanner un dossier (recursif, max 10 fichiers)
+3. Scanner une URL (HTTPS recommande)
+4. Scanner via hash SHA256
+5. Configurer cle API
+0. Quitter
+
+Choix (0-5):
+```
+
+### Exemples
+
+#### Scanner un fichier
+
+```
+Choix: 1
+Chemin du fichier: C:\Users\bbrod\Downloads\test.exe
+Hash: abc123...
+=== Resultat 'test.exe' (cache VT) ===
+Propre (62 analyse)
+```
+
+#### Scanner une URL
+
+```
+Choix: 3
+URL a scanner: https://example.com
+Scan lance. Attente (60s)...
+Resultat 'https://example.com':
+Propre (89 analyse)
+```
+
+#### Scanner par hash
+
+```
+Choix: 4
+SHA256 hash: abc123def456...
+Resultat hash 'abc123...':
+Propre (70 analyse)
+```
+
+---
+
+## ⚠️ Limites API
+
+| Ressource | Quota | Recommandation |
+|-----------|-------|----------------|
+| Upload fichiers | 4/jour | Vérifier cache d'abord |
+| Scan URLs | 4/min | Attendre entre scans |
+| Requêtes API | 60/min | Délai automatique 16s |
+
+---
+
+## 🔧 Dépannage
+
+### Erreur 400 Bad Request
+
+| Cause | Solution |
+|-------|----------|
+| Espaces dans l'URL API | Vérifier `$script:BaseUrl` sans espaces |
+| Clé API invalide | Régénérer sur virustotal.com |
+| Quota dépassé | Attendre 24h (fichiers) ou 1min (URLs) |
+
+### Erreur Read-Host
+
+| Cause | Solution |
+|-------|----------|
+| Prompt vide | Utiliser `Read-Host "texte"` (pas `""`) |
+
+### Upload échoue
+
+| Cause | Solution |
+|-------|----------|
+| Fichier trop volumineux | Max 650 MB (API VT) |
+| Multipart mal formé | Utiliser `MemoryStream` + `StreamWriter` |
+
+### Vérifier la clé API
+
+```powershell
+$apiKey = "VOTRE_CLE"
+$headers = @{ "x-apikey" = $apiKey }
+Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/users/me" -Headers $headers
+```
+
+---
+
+## 📁 Structure du Projet
+
+```
+vt-scanner-cli/
+├── vt-scanner.ps1      # Script principal (~200 lignes)
+├── README.md           # Ce fichier
+├── digest.txt          # Documentation technique
+└── .git/               # Dépôt Git
+```
+
+---
+
+## 📝 Notes Techniques
+
+### Corrections Appliquées (v1.0)
+
+| Problème | Solution |
+|----------|----------|
+| `Read-Host ""` vide | Prompt avec texte |
+| Upload 400 | `MemoryStream` + `StreamWriter` |
+| URL 400 | `$urlId = $scan.data.id` (sans split) |
+| Espaces URL API | Suppression espaces dans `$BaseUrl` |
+
+### Fonctions Principales
+
+- `Get-ScanReport` - Récupère les stats d'analyse
+- `Test-FileMalicious` - Formate le résultat
+- `Scan-File` - Upload multipart
+- `Scan-Url` - Encodage base64 URL
+- `Scan-Folder` - Scan récursif limité
+
+---
+
+## 📄 Licence
+
+Ce projet est fourni **tel quel** pour un usage **personnel et éducatif**.
+
+---
+
+## 🔗 Liens Utiles
+
+| Ressource | Lien |
+|-----------|------|
+| **VirusTotal API v3** | [developers.virustotal.com](https://developers.virustotal.com/reference) |
+| **Obtenir une clé API** | [virustotal.com/gui/my-apikey](https://www.virustotal.com/gui/my-apikey) |
+| **Documentation PowerShell** | [docs.microsoft.com/powershell](https://docs.microsoft.com/powershell/) |
+| **Dépôt GitHub** | [github.com/valorisa/vt-scanner-cli](https://github.com/valorisa/vt-scanner-cli) |
+
+---
+
+## 📞 Support
+
+Pour toute question ou problème :
+
+1. Consultez la section [Dépannage](#dépannage)
+2. Ouvrez une issue sur [GitHub](https://github.com/valorisa/vt-scanner-cli/issues)
+
+---
+
+**Développé avec ❤️ par valorisa**
+
+*Version: 1.0 | PowerShell 5.1+ | API VirusTotal v3*
