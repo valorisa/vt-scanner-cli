@@ -12,7 +12,7 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 
 - [Fonctionnalités](#-fonctionnalités)
 - [Structure du Projet](#-structure-du-projet)
-- [Prérequis](#-prérequis)
+- [Prérequis](#%EF%B8%8F-prérequis)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Usage](#-usage)
