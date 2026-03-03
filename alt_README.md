@@ -82,6 +82,7 @@ vt-scanner-cli/
 ### Méthode 1 : Cloner le dépôt (Recommandé)
 
 ```powershell
+# Sous Powershell 5.1+
 git clone https://github.com/valorisa/vt-scanner-cli.git
 cd vt-scanner-cli
 ```
@@ -123,7 +124,8 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ### Vérifier sa clé API
 
 ```powershell
-$apiKey = "VOTRE_CLE"
+# Sous Powershell 5.1+
+$apiKey = "VOTRE_CLE_API"
 $headers = @{ "x-apikey" = $apiKey }
 Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/users/me" -Headers $headers
 ```
