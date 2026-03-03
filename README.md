@@ -256,9 +256,21 @@ Pour toute question ou problème :
 
 *Version: 1.0 | PowerShell 5.1+ | API VirusTotal v3*
 
+---
 
+## 📝 Notes de Version
 
+### v1.0 (Version Actuelle)
 
+- ✅ Scanner de fichiers avec cache VT
+- ✅ Upload multipart corrigé
+- ✅ Scan d'URLs fonctionnel
+- ✅ Scan par hash SHA256
+- ✅ Scan de dossiers (max 10 fichiers)
+- ✅ Gestion des erreurs améliorée
+- ✅ Compatible PowerShell 5.1+
 
+---
 
+*README généré pour vt-scanner-cli - Dernière mise à jour: 3 mars 2026*
 
