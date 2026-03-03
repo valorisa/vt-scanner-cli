@@ -101,6 +101,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ### Lancement
 
 ```powershell
+# Sous PowrShell 5.1+
 .\vt-scanner.ps1
 ```
 
@@ -275,6 +276,7 @@ Pour toute question ou problème :
 ---
 
 *README généré pour vt-scanner-cli - Dernière mise à jour: 3 mars 2026*
+
 
 
 
