@@ -12,7 +12,7 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 
 - [Description](#-Description)
 - [Fonctionnalités](#-fonctionnalités)
-- [Prérequis](#-prérequis)
+- [Prérequis](#%EF%B8%8F-prérequis)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Usage](#-usage)
@@ -255,6 +255,7 @@ Pour toute question ou problème :
 **Développé avec ❤️ par valorisa**
 
 *Version: 1.0 | PowerShell 5.1+ | API VirusTotal v3*
+
 
 
 
