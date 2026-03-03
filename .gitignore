@@ -1,0 +1,12 @@
+# PowerShell
+*.psd1
+*.pssc
+*.psm1
+
+# Logs
+*.log
+logs/
+
+# Temporaires
+*.tmp
+*.bak
