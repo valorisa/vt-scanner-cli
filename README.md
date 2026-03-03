@@ -23,12 +23,13 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 - [Contribution](#-contribution)
 - [Licence](#-licence)
 - [Liens Utiles](#-liens-utiles)
+- [Support](#-Support)
 
 ---
-
+]
 ## 📖 Description
 
-**VirusTotal Scanner CLI** est un outil en ligne de commande PowerShell permettant d'analyser rapidement des fichiers, dossiers et URLs via l'API VirusTotal v3. Idéal pour les administrateurs système, analystes sécurité et utilisateurs avancés.
+**VirusTotal Scanner CLI** est un outil en ligne de commande PowerShell permettant d'analyser rapidement des fichiers, dossiers et URLs via l'API VirusTotal v3. Idéal pour les administrateurs système, analystes sécurité et utilisateur-s avancés.
 
 ---
 
@@ -254,6 +255,7 @@ Pour toute question ou problème :
 **Développé avec ❤️ par valorisa**
 
 *Version: 1.0 | PowerShell 5.1+ | API VirusTotal v3*
+
 
 
 
