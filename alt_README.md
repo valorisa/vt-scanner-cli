@@ -319,7 +319,7 @@ URL: https://example.com
 Ce projet est fourni **tel quel** pour un usage **personnel et éducatif**.
 
 | Usage | Autorisé |
-|-------|----------|
+| ----- | -------- |
 | Personnel | ✅ Oui |
 | Éducatif | ✅ Oui |
 | Commercial | ❌ Non |
