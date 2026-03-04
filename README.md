@@ -369,5 +369,5 @@ Pour toute question ou problème :
 
 ---
 
-*README généré pour vt-scanner-cli - Dernière mise à jour: le 03 mars 2026*
+*README généré pour vt-scanner-cli - Dernière mise à jour: le 04 mars 2026*
 
