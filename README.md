@@ -234,6 +234,116 @@ Unblock-File -Path ".\vt-scanner.ps1"
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
+### Git Credential Manager - Warnings "multiple values"
+
+**Problème :** Messages d'erreur lors des commandes Git :
+```text
+warning: credential.helper has multiple values
+'C:\Program Files\GitHub CLI\gh.exe' auth git-credential get: line 1: command not found
+'C:\Program Files\GitHub CLI\gh.exe' auth git-credential store: line 1: command not found
+```
+
+**Cause :** Plusieurs valeurs sont configurées pour `credential.helper` dans Git (niveau système + global).
+
+---
+
+#### Solution complète
+
+##### 1. PowerShell NORMAL (sans droits administrateur)
+
+```powershell
+# Diagnostic initial
+git config --get-all credential.helper
+# Si plusieurs valeurs s'affichent → problème confirmé
+
+# Nettoyer les entrées gist.github.com (cause des erreurs gh.exe)
+git config --global --unset-all credential.https://gist.github.com.helper
+
+# Vérifier le nettoyage global
+git config --global --list | Select-String "credential"
+# Doit afficher uniquement : credential.helper=manager
+```
+
+##### 2. PowerShell ADMINISTRATEUR (droits requis)
+
+> ⚠️ **Comment ouvrir PowerShell en Administrateur :**
+> - Menu Démarrer → Chercher "PowerShell" → Clic droit → **"Exécuter en tant qu'administrateur"**
+> - Ou raccourci : `Win + X` → "Windows PowerShell (admin)" / "Terminal (admin)"
+
+```powershell
+# Supprimer TOUTES les entrées credential.helper au niveau système
+git config --system --unset-all credential.helper
+
+# (Optionnel) Supprimer l'entrée Azure DevOps si tu ne l'utilises pas
+git config --system --unset credential.https://dev.azure.com.usehttppath
+
+# Vérifier ce qui reste au niveau système
+git config --system --list | Select-String "credential"
+# Doit afficher uniquement (si Azure gardé) :
+# credential.https://dev.azure.com.usehttppath = true
+# OU rien du tout (si Azure supprimé)
+```
+
+##### 3. PowerShell NORMAL (vérification finale)
+
+```powershell
+# Revenir dans ton projet
+cd C:\Users\bbrod\Projets\vt-scanner-cli
+
+# Vérifier qu'il ne reste qu'UNE SEULE valeur pour credential.helper
+git config --get-all credential.helper
+# ✅ RÉSULTAT ATTENDU : manager (une seule ligne)
+
+# Tester un push (ne doit plus afficher de warning)
+git push origin main
+# ✅ RÉSULTAT ATTENDU : Everything up-to-date (sans warning)
+
+# Tester un pull
+git pull
+# ✅ RÉSULTAT ATTENDU : Already up to date. (sans warning)
+```
+
+---
+
+#### Tableau récapitulatif des commandes
+
+| Commande | Mode | Objectif |
+| -------- | ---- | -------- |
+| `git config --get-all credential.helper` | 👤 Normal | Diagnostiquer le problème |
+| `git config --list --show-origin --show-scope` | 👤 Normal | Voir toutes les configs par niveau |
+| `git config --global --unset-all credential.https://gist.github.com.helper` | 👤 Normal | Supprimer entrées gist.github.com |
+| `git config --system --unset-all credential.helper` | 🔒 **Admin** | **Supprimer doublons système** |
+| `git config --system --unset credential.https://dev.azure.com.usehttppath` | 🔒 **Admin** | Optionnel : supprimer entrée Azure |
+| `git push origin main` | 👤 Normal | Tester que tout fonctionne |
+| `git pull` | 👤 Normal | Tester que tout fonctionne |
+
+---
+
+#### Résultats attendus après résolution
+
+| Avant | Après |
+| ----- | ----- |
+| ⚠️ `warning: credential.helper has multiple values` | ✅ Plus aucun warning |
+| ❌ `'C:\Program Files\GitHub CLI\gh.exe' ... command not found` | ✅ Plus aucune erreur gh.exe |
+| ⚠️ 2-3 valeurs pour `credential.helper` | ✅ 1 seule valeur (`manager`) |
+| ✅ `git push` fonctionnel (avec warnings) | ✅ `git push` fonctionnel (propre) |
+
+---
+
+#### Notes importantes
+
+| Point | Détail |
+| ----- | ------ |
+| **Fichier modifié (Admin)** | `C:\Program Files (x86)\Git\etc\gitconfig` |
+| **Fichier modifié (Normal)** | `C:\Users\<ton_user>\.gitconfig` |
+| **Pourquoi Admin ?** | Le dossier `Program Files (x86)` nécessite des droits élevés |
+| **Impact sur autres projets** | Aucun, la config globale `manager` reste active |
+| **Réversible ?** | Oui, réinstaller GCM ou éditer manuellement les fichiers |
+
+---
+
+**Résultat :** Plus aucun warning, authentification Git fonctionne correctement ✅
+
 ---
 
 ## 💻 Développement
@@ -370,4 +480,5 @@ Pour toute question ou problème :
 ---
 
 *README généré pour vt-scanner-cli - Dernière mise à jour: le 04 mars 2026*
+
 
