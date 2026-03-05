@@ -1,0 +1,41 @@
+﻿# ===================================
+# Git Line Endings Configuration
+# ===================================
+
+# Par défaut : LF (Unix-style)
+* text=auto eol=lf
+
+# Markdown : LF
+*.md text eol=lf
+
+# PowerShell : CRLF (Windows)
+*.ps1 text eol=crlf
+*.psd1 text eol=crlf
+*.psm1 text eol=crlf
+
+# Config files : LF
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.xml text eol=lf
+
+# Git files : LF
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf
+
+# Scripts shell : LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Images et binaires : binaire
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.exe binary
+*.dll binary
+*.zip binary
