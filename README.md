@@ -434,26 +434,16 @@ Choix: 3
 URL: https://example.com
 ```
 
-### Test de scan dossier + export CSV
-
-```powershell
-# Sous Powershell 5.1+
-.\vt-scanner.ps1
-Choix: 2
-Chemin: C:\chemin\vers\dossier
-# À la fin, taper 'o' pour exporter le CSV
-```
-
 ---
 
 ## 🤝 Contribution
 
 ### Comment Contribuer
 
-1. Fork le dépôt
+1. Forkez le dépôt
 2. Créez une branche (`feature/nouvelle-fonction`)
 3. Committez les changements (`git commit -m 'Ajout fonctionnalité'`)
-4. Push vers la branche (`git push origin feature/nouvelle-fonction`)
+4. Pushez vers la branche (`git push origin feature/nouvelle-fonction`)
 5. Ouvrez une Pull Request
 
 ### Bonnes Pratiques

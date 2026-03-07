@@ -1,4 +1,4 @@
-﻿# VirusTotal Scanner CLI - VERSION 1.1 (PS5.1+)
+# VirusTotal Scanner CLI - VERSION 1.1 (PS5.1+)
 # Usage: .\vt-scanner.ps1
 # Nouvelles fonctionnalites : Export CSV + Gestion d'erreurs robuste
 
