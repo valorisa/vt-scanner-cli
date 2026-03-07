@@ -1,10 +1,10 @@
-﻿# VirusTotal Scanner CLI - VERSION 1.1 (PS5.1+)
+# VirusTotal Scanner CLI - VERSION 1.1 (PS5.1+)
 # Usage: .\vt-scanner.ps1
 # Nouvelles fonctionnalites : Export CSV + Gestion d'erreurs robuste
 
 param([string]$ApiKey = $null)
 
-$script:BaseUrl = "https://www.virustotal.com/api/v3"
+$script:BaseUrl = "https://www.virustotal.com/api/v3".Trim()
 $script:Headers = $null
 $script:DelayBetweenRequests = 16
 
@@ -295,43 +295,67 @@ function Scan-Folder {
 }
 
 function Scan-Url {
+
     $url = Read-Host "URL a scanner (HTTPS recommande)"
 
-    # CORRECTION: Supprimer les espaces avant/apres
     $url = $url.Trim()
+    if ($url -notmatch '^https?://') { $url = "https://$url" }
+    $url = [System.Uri]::EscapeUriString($url)
 
-    if (-not $url.StartsWith("http")) {
-        Write-Warning "URL invalide. Ex: https://exemple.com"
+    try {
+        $uri = [System.Uri]$url
+        if ($uri.Scheme -notin @('http','https')) {
+            Write-Warning "URL invalide. HTTP/HTTPS uniquement."
+            return
+        }
+    }
+    catch {
+        Write-Warning "Format d'URL incorrect. Exemple : https://example.com"
         return
     }
 
-    $body = @{ url = $url } | ConvertTo-Json -Compress
     try {
-        $scan = Invoke-RestMethod -Uri "$script:BaseUrl/urls" -Method Post -Headers $script:Headers -Body $body
+
+        Write-Host "URL validee : $url" -ForegroundColor Cyan
+
+        $scan = Invoke-RestMethod `
+            -Uri "$script:BaseUrl/urls" `
+            -Method Post `
+            -Headers $script:Headers `
+            -Body "url=$url" `
+            -ContentType "application/x-www-form-urlencoded" `
+            -ErrorAction Stop
 
         $urlId = $scan.data.id
+
         Write-Host "ID Scan: $urlId" -ForegroundColor Gray
-        Write-Host "Scan lance. Attente (60s)..." -ForegroundColor Yellow
-        Start-Sleep 60
+        Write-Host "Scan lance. Attente des resultats..." -ForegroundColor Yellow
+
+        $stats = $null
+
+        for ($i = 0; $i -lt 8; $i++) {
+
+        Start-Sleep 15
+        Write-Host "." -NoNewline -ForegroundColor Gray
 
         $stats = Get-ScanReport $urlId "urls"
+
+        if ($stats) { break }
+}
+
+        Write-Host ""
+
         Write-Host "`nResultat '$url':" -ForegroundColor Cyan
 
         if ($stats) {
             Write-Host (Test-FileMalicious $stats) -ForegroundColor $(if($stats.malicious -gt 0){'Red'}else{'Green'})
-        } else {
-            Write-Warning "Analyse encore en cours. Re-testez dans quelques minutes."
+        }
+        else {
+            Write-Warning "Analyse encore en cours."
         }
     }
     catch {
-        Write-Error "Erreur URL: $($_.Exception.Message)"
-        if ($_.Exception.Response) {
-            try {
-                $reader = New-Object IO.StreamReader($_.Exception.Response.GetResponseStream())
-                Write-Warning "Reponse serveur: $($reader.ReadToEnd())"
-            }
-            catch {}
-        }
+        Write-Error "Erreur API VirusTotal: $($_.Exception.Message)"
     }
 }
 
