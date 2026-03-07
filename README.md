@@ -522,7 +522,7 @@ Pour toute question ou problème :
 
 ---
 
-*README généré pour vt-scanner-cli - Dernière mise à jour: le 06 mars 2026*
+*README généré pour vt-scanner-cli - Dernière mise à jour: le 07 mars 2026*
 
 ---
 
