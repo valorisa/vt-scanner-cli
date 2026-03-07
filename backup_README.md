@@ -2,7 +2,7 @@
 
 Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de commande PowerShell.
 
-![Version](https://img.shields.io/badge/version-1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blueviolet)
 ![License](https://img.shields.io/badge/license-Personal%2FEdu-green)
 
@@ -30,7 +30,7 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 
 ## 📖 Description
 
-**VirusTotal Scanner CLI** est un outil en ligne de commande PowerShell permettant d'analyser rapidement des fichiers, dossiers et URLs via l'API VirusTotal v3. Idéal pour les administrateurs système, analystes sécurité et utilisateur-s avancés.
+**VirusTotal Scanner CLI** est un outil en ligne de commande PowerShell permettant d'analyser rapidement des fichiers, dossiers et URLs via l'API VirusTotal v3. Idéal pour les administrateurs système, analystes sécurité et utilisateurs avancés.
 
 ---
 
@@ -39,7 +39,7 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 | Option | Description |
 | ------ | ----------- |
 | **1** | Scanner un fichier (hash + upload optionnel) |
-| **2** | Scanner un dossier (récursif, max 10 fichiers) |
+| **2** | Scanner un dossier (récursif, max 10 fichiers) + **Export CSV** |
 | **3** | Scanner une URL (HTTPS recommandé) |
 | **4** | Scanner via hash SHA256 |
 | **5** | Configurer clé API |
@@ -51,6 +51,9 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 - **Upload Multipart** : Support des fichiers jusqu'à 650 MB
 - **Polling Intelligent** : Attente automatique des résultats d'analyse
 - **Rapports Détaillés** : Affichage des détections par moteur antivirus
+- **Export CSV** : Génération de rapports traçables (v1.1)
+- **Barre de Progression** : Visibilité pendant le scan de dossiers (v1.1)
+- **Gestion d'Erreurs Robuste** : Try/Catch dans la boucle de scan (v1.1)
 
 ---
 
@@ -58,8 +61,12 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 
 ```text
 vt-scanner-cli/
-├── vt-scanner.ps1      # Script principal (~200 lignes)
+├── ROADMAP.md          # Roadmap
+├── CHANGELOG.md        # Changements
+├── SECURITY.md         # Securité
+├── vt-scanner.ps1      # Script principal (~395 lignes)
 ├── README.md           # Ce fichier
+├── backup_README.md    # Une copie de sauvegarde du README.md
 ├── digest.txt          # Documentation technique
 └── .git/               # Dépôt Git
 ```
@@ -167,6 +174,27 @@ Hash: abc123...
 Propre (62 analyse)
 ```
 
+#### Scanner un dossier (avec export CSV)
+
+```text
+Choix: 2
+Chemin du dossier: C:\Users\bbrod\Downloads
+[ATTENTION] Scan limité aux 10 premiers fichiers (Quota API gratuit).
+Début du scan de 10 fichiers...
+  [+] fichier1.exe: Propre (62 analyse)
+  [-] fichier2.dll: 2/62 detections malveillantes
+
+--- Résumé du scan ---
+FileName     Status              Detections
+--------     ------              ----------
+fichier1.exe Propre (62 analyse) 0
+fichier2.dll 2/62 detections...  2
+
+Souhaitez-vous exporter ces résultats en CSV ?
+Tapez 'o' pour exporter (Entrée pour ignorer): o
+[OK] Rapport exporte : vt_scan_report_20260306_143022.csv
+```
+
 #### Scanner une URL
 
 ```text
@@ -184,16 +212,6 @@ Choix: 4
 SHA256 hash: abc123def456...
 Resultat hash 'abc123...':
 Propre (70 analyse)
-```
-
-#### Scanner un dossier
-
-```text
-Choix: 2
-Chemin du dossier: C:\Users\bbrod\Downloads
-Scan 10 fichiers...
-  fichier1.exe: Propre (62 analyse)
-  fichier2.dll: 2/62 detections malveillantes
 ```
 
 ---
@@ -234,6 +252,117 @@ Unblock-File -Path ".\vt-scanner.ps1"
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
+### Git Credential Manager - Warnings "multiple values"
+
+**Problème :** Messages d'erreur lors des commandes Git :
+
+```text
+warning: credential.helper has multiple values
+'C:\Program Files\GitHub CLI\gh.exe' auth git-credential get: line 1: command not found
+'C:\Program Files\GitHub CLI\gh.exe' auth git-credential store: line 1: command not found
+```
+
+**Cause :** Plusieurs valeurs sont configurées pour `credential.helper` dans Git (niveau système + global).
+
+---
+
+#### Solution complète
+
+##### 1. PowerShell NORMAL (sans droits administrateur)
+
+```powershell
+# Diagnostic initial
+git config --get-all credential.helper
+# Si plusieurs valeurs s'affichent → problème confirmé
+
+# Nettoyer les entrées gist.github.com (cause des erreurs gh.exe)
+git config --global --unset-all credential.https://gist.github.com.helper
+
+# Vérifier le nettoyage global
+git config --global --list | Select-String "credential"
+# Doit afficher uniquement : credential.helper=manager
+```
+
+##### 2. PowerShell ADMINISTRATEUR (droits requis)
+
+> ⚠️ **Comment ouvrir PowerShell en Administrateur :**
+> - Menu Démarrer → Chercher "PowerShell" → Clic droit → **"Exécuter en tant qu'administrateur"**
+> - Ou raccourci : `Win + X` → "Windows PowerShell (admin)" / "Terminal (admin)"
+
+```powershell
+# Supprimer TOUTES les entrées credential.helper au niveau système
+git config --system --unset-all credential.helper
+
+# (Optionnel) Supprimer l'entrée Azure DevOps si tu ne l'utilises pas
+git config --system --unset credential.https://dev.azure.com.usehttppath
+
+# Vérifier ce qui reste au niveau système
+git config --system --list | Select-String "credential"
+# Doit afficher uniquement (si Azure gardé) :
+# credential.https://dev.azure.com.usehttppath = true
+# OU rien du tout (si Azure supprimé)
+```
+
+##### 3. PowerShell NORMAL (vérification finale)
+
+```powershell
+# Revenir dans ton projet
+cd C:\Users\bbrod\Projets\vt-scanner-cli
+
+# Vérifier qu'il ne reste qu'UNE SEULE valeur pour credential.helper
+git config --get-all credential.helper
+# ✅ RÉSULTAT ATTENDU : manager (une seule ligne)
+
+# Tester un push (ne doit plus afficher de warning)
+git push origin main
+# ✅ RÉSULTAT ATTENDU : Everything up-to-date (sans warning)
+
+# Tester un pull
+git pull
+# ✅ RÉSULTAT ATTENDU : Already up to date. (sans warning)
+```
+
+---
+
+#### Tableau récapitulatif des commandes
+
+| Commande | Mode | Objectif |
+| -------- | ---- | -------- |
+| `git config --get-all credential.helper` | 👤 Normal | Diagnostiquer le problème |
+| `git config --list --show-origin --show-scope` | 👤 Normal | Voir toutes les configs par niveau |
+| `git config --global --unset-all credential.https://gist.github.com.helper` | 👤 Normal | Supprimer entrées gist.github.com |
+| `git config --system --unset-all credential.helper` | 🔒 **Admin** | **Supprimer doublons système** |
+| `git config --system --unset credential.https://dev.azure.com.usehttppath` | 🔒 **Admin** | Optionnel : supprimer entrée Azure |
+| `git push origin main` | 👤 Normal | Tester que tout fonctionne |
+| `git pull` | 👤 Normal | Tester que tout fonctionne |
+
+---
+
+#### Résultats attendus après résolution
+
+| Avant | Après |
+| ----- | ----- |
+| ⚠️ `warning: credential.helper has multiple values` | ✅ Plus aucun warning |
+| ❌ `'C:\Program Files\GitHub CLI\gh.exe' ... command not found` | ✅ Plus aucune erreur gh.exe |
+| ⚠️ 2-3 valeurs pour `credential.helper` | ✅ 1 seule valeur (`manager`) |
+| ✅ `git push` fonctionnel (avec warnings) | ✅ `git push` fonctionnel (propre) |
+
+---
+
+#### Notes importantes
+
+| Point | Détail |
+| ----- | ------ |
+| **Fichier modifié (Admin)** | `C:\Program Files (x86)\Git\etc\gitconfig` |
+| **Fichier modifié (Normal)** | `C:\Users\<ton_user>\.gitconfig` |
+| **Pourquoi Admin ?** | Le dossier `Program Files (x86)` nécessite des droits élevés |
+| **Impact sur autres projets** | Aucun, la config globale `manager` reste active |
+| **Réversible ?** | Oui, réinstaller GCM ou éditer manuellement les fichiers |
+
+---
+
+**Résultat :** Plus aucun warning, authentification Git fonctionne correctement ✅
+
 ---
 
 ## 💻 Développement
@@ -247,18 +376,22 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 | `Get-ScanReport` | Récupère les stats d'analyse |
 | `Test-FileMalicious` | Formate le résultat |
 | `Scan-File` | Upload multipart + polling |
-| `Scan-Folder` | Scan récursif limité |
+| `Scan-Folder` | Scan récursif limité + export CSV (v1.1) |
 | `Scan-Url` | Encodage base64 URL |
 | `Scan-Hash` | Recherche par hash seul |
+| `Export-ScanResults` | Export des résultats en CSV (v1.1) |
 
-### Corrections Appliquées (v1.0)
+### Corrections Appliquées (v1.0 → v1.1)
 
-| Problème | Solution |
-| -------- | -------- |
-| `Read-Host ""` vide | Prompt avec texte |
-| Upload 400 | `MemoryStream` + `StreamWriter` |
-| URL 400 | `$urlId = $scan.data.id` (sans split) |
-| Espaces URL API | Suppression espaces dans `$BaseUrl` |
+| Problème | Solution | Version |
+| -------- | -------- | ------- |
+| `Read-Host ""` vide | Prompt avec texte | v1.0 |
+| Upload 400 | `MemoryStream` + `StreamWriter` | v1.0 |
+| URL 400 | `$urlId = $scan.data.id` (sans split) | v1.0 |
+| Espaces URL API | Suppression espaces dans `$BaseUrl` | v1.1 |
+| Pas d'export CSV | Ajout `Export-ScanResults` | v1.1 |
+| Scan-Folder fragile | Try/Catch + gestion 403 | v1.1 |
+| Pas de progression | Ajout `Write-Progress` | v1.1 |
 
 ---
 
@@ -285,6 +418,16 @@ Choix: 1
 Chemin: C:\chemin\vers\test.txt
 ```
 
+### Test de scan dossier + export CSV
+
+```powershell
+# Sous Powershell 5.1+
+.\vt-scanner.ps1
+Choix: 2
+Chemin: C:\chemin\vers\dossier
+# À la fin, taper 'o' pour exporter le CSV
+```
+
 ### Test de scan URL
 
 ```powershell
@@ -300,10 +443,10 @@ URL: https://example.com
 
 ### Comment Contribuer
 
-1. Fork le dépôt
+1. Forkez le dépôt
 2. Créez une branche (`feature/nouvelle-fonction`)
 3. Committez les changements (`git commit -m 'Ajout fonctionnalité'`)
-4. Push vers la branche (`git push origin feature/nouvelle-fonction`)
+4. Pushez vers la branche (`git push origin feature/nouvelle-fonction`)
 5. Ouvrez une Pull Request
 
 ### Bonnes Pratiques
@@ -351,13 +494,23 @@ Pour toute question ou problème :
 
 **Développé avec ❤️ par valorisa**
 
-*Version: 1.0 | PowerShell 5.1+ | API VirusTotal v3*
+*Version: 1.1 | PowerShell 5.1+ | API VirusTotal v3*
 
 ---
 
 ## 📝 Notes de Version
 
-### v1.0 (Version Actuelle)
+### v1.1 (Version Actuelle) - 06 mars 2026
+
+- ✅ **NOUVEAU** : Export CSV des résultats de scan (option 2)
+- ✅ **NOUVEAU** : Barre de progression pendant le scan de dossiers
+- ✅ **NOUVEAU** : Détection explicite du quota API (erreur 403)
+- ✅ **NOUVEAU** : Try/Catch robuste dans la boucle de scan
+- ✅ **CORRECTION** : Espaces supprimés dans `$script:BaseUrl` (erreur 400)
+- ✅ **CORRECTION** : Trim() sur les URLs utilisateur
+- ✅ **CORRECTION** : Nettoyage contenu markdownlint.json du script
+
+### v1.0 (Version Précédente) - 05 mars 2026
 
 - ✅ Scanner de fichiers avec cache VT
 - ✅ Upload multipart corrigé
@@ -369,4 +522,23 @@ Pour toute question ou problème :
 
 ---
 
-*README généré pour vt-scanner-cli - Dernière mise à jour: le 03 mars 2026*
+*README généré pour vt-scanner-cli - Dernière mise à jour: le 07 mars 2026*
+
+---
+
+## 📊 Résumé des Modifications Apportées
+
+| Élément | v1.0 | v1.1 |
+| ------- | ---- | ---- |
+| **Badge Version** | `1.0-blue` | `1.1-blue` |
+| **Option 2** | Scan dossier | Scan dossier + **Export CSV** |
+| **Détails Fonctionnalités** | 4 points | **7 points** (+3 nouveaux) |
+| **Structure** | ~200 lignes | **~370 lignes** |
+| **Exemple Scan Dossier** | Basique | **Avec export CSV** |
+| **Architecture** | 8 fonctions | **9 fonctions** (+Export-ScanResults) |
+| **Corrections** | 4 (v1.0) | **7** (v1.0 + v1.1) |
+| **Notes de Version** | v1.0 uniquement | **v1.0 + v1.1** |
+| **Date** | 05 mars 2026 | **06 mars 2026** |
+| **URLs** | Espaces superflus | **Nettoyées** (markdownlint) |
+
+---
