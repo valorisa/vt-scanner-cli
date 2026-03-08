@@ -359,6 +359,8 @@ git pull
 | **Impact sur autres projets** | Aucun, la config globale `manager` reste active |
 | **Réversible ?** | Oui, réinstaller GCM ou éditer manuellement les fichiers |
 
+---
+
 **Résultat :** Plus aucun warning, authentification Git fonctionne correctement ✅
 
 ---
