@@ -375,7 +375,6 @@ Analyzing source, output will be written to 'digest.txt'...
 Error: 'utf-8' codec can't decode byte 0xe9 in position 124: invalid continuation byte
 Aborted!
 PS C:\Users\bbrod\Projets\vt-scanner-cli>
-PS C:\Users\bbrod\Projets\vt-scanner-cli>
 PS C:\Users\bbrod\Projets\vt-scanner-cli> cd C:\Users\bbrod\Projets\vt-scanner-cli
 >>
 >> # Listes des fichiers à corriger
@@ -413,28 +412,6 @@ Directory: vt-scanner-cli
 Files analyzed: 7
 
 Estimated tokens: 14.1k
-PS C:\Users\bbrod\Projets\vt-scanner-cli>
-PS C:\Users\bbrod\Projets\vt-scanner-cli> ls
-
-
-    Répertoire : C:\Users\bbrod\Projets\vt-scanner-cli
-
-
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------ ----
-d-----        08/03/2026     16:41                .git
--a----        05/03/2026     14:34            706 .gitattributes
--a----        08/03/2026     17:15            129 .gitignore
--a----        08/03/2026     17:15             55 .markdownlint.json
--a----        08/03/2026     17:15          15078 backup_README.md
--a----        07/03/2026     16:51            460 CHANGELOG.md
--a----        08/03/2026     17:16          54791 digest.txt
--a----        08/03/2026     17:15          15103 README.md
--a----        07/03/2026     16:51            191 ROADMAP.md
--a----        07/03/2026     16:51            284 SECURITY.md
--a----        08/03/2026     17:15          22450 vt-scanner.ps1
-
-
 PS C:\Users\bbrod\Projets\vt-scanner-cli>
 
 ---
