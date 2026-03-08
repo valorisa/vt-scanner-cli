@@ -365,6 +365,80 @@ git pull
 
 ---
 
+### Gitingest aborted
+```text
+PS C:\Users\bbrod\Projets\vt-scanner-cli> gitingest
+Analyzing source, output will be written to 'digest.txt'...
+2026-03-08 17:14:32.951 | INFO     | gitingest.entrypoint:ingest_async:89 | Starting ingestion process | {"source":"."}
+2026-03-08 17:14:32.951 | INFO     | gitingest.entrypoint:ingest_async:105 | Processing local directory | {"source":"."}
+2026-03-08 17:14:32.951 | INFO     | gitingest.entrypoint:ingest_async:134 | Starting local directory processing
+Error: 'utf-8' codec can't decode byte 0xe9 in position 124: invalid continuation byte
+Aborted!
+PS C:\Users\bbrod\Projets\vt-scanner-cli>
+PS C:\Users\bbrod\Projets\vt-scanner-cli>
+PS C:\Users\bbrod\Projets\vt-scanner-cli> cd C:\Users\bbrod\Projets\vt-scanner-cli
+>>
+>> # Listes des fichiers à corriger
+>> $fichiers = @(".gitignore", "README.md", "backup_README.md", "vt-scanner.ps1", ".markdownlint.json")
+>>
+>> foreach ($fichier in $fichiers) {
+>>     if (Test-Path $fichier) {
+>>         # Lire et réécrire en UTF-8 sans BOM
+>>         $content = Get-Content -Path $fichier -Encoding UTF8
+>>         $content | Set-Content -Path $fichier -Encoding UTF8 -NoNewline
+>>
+>>         Write-Host "✅ Encodage corrigé pour : $fichier" -ForegroundColor Green
+>>     }
+>> }
+✅ Encodage corrigé pour : .gitignore
+✅ Encodage corrigé pour : README.md
+✅ Encodage corrigé pour : backup_README.md
+✅ Encodage corrigé pour : vt-scanner.ps1
+✅ Encodage corrigé pour : .markdownlint.json
+PS C:\Users\bbrod\Projets\vt-scanner-cli>
+PS C:\Users\bbrod\Projets\vt-scanner-cli> gitingest
+Analyzing source, output will be written to 'digest.txt'...
+2026-03-08 17:16:06.643 | INFO     | gitingest.entrypoint:ingest_async:89 | Starting ingestion process | {"source":"."}
+2026-03-08 17:16:06.643 | INFO     | gitingest.entrypoint:ingest_async:105 | Processing local directory | {"source":"."}
+2026-03-08 17:16:06.644 | INFO     | gitingest.entrypoint:ingest_async:134 | Starting local directory processing
+2026-03-08 17:16:06.660 | INFO     | gitingest.entrypoint:ingest_async:140 | Processing files and generating output
+2026-03-08 17:16:06.660 | INFO     | gitingest.ingestion:ingest_query:44 | Starting file ingestion | {"slug":"vt-scanner-cli","subpath":"/","local_path":"C:\\Users\\bbrod\\Projets\\vt-scanner-cli","max_file_size":10485760}
+2026-03-08 17:16:06.661 | INFO     | gitingest.ingestion:ingest_query:96 | Processing directory | {"directory_path":"C:\\Users\\bbrod\\Projets\\vt-scanner-cli"}
+2026-03-08 17:16:06.678 | INFO     | gitingest.ingestion:ingest_query:109 | Directory processing completed | {"total_files":7,"total_directories":0,"total_size_bytes":53621,"stats_total_files":7,"stats_total_size":53621}
+2026-03-08 17:16:06.952 | INFO     | gitingest.entrypoint:ingest_async:147 | Ingestion completed successfully
+Analysis complete! Output written to: digest.txt
+
+Summary:
+Directory: vt-scanner-cli
+Files analyzed: 7
+
+Estimated tokens: 14.1k
+PS C:\Users\bbrod\Projets\vt-scanner-cli>
+PS C:\Users\bbrod\Projets\vt-scanner-cli> ls
+
+
+    Répertoire : C:\Users\bbrod\Projets\vt-scanner-cli
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        08/03/2026     16:41                .git
+-a----        05/03/2026     14:34            706 .gitattributes
+-a----        08/03/2026     17:15            129 .gitignore
+-a----        08/03/2026     17:15             55 .markdownlint.json
+-a----        08/03/2026     17:15          15078 backup_README.md
+-a----        07/03/2026     16:51            460 CHANGELOG.md
+-a----        08/03/2026     17:16          54791 digest.txt
+-a----        08/03/2026     17:15          15103 README.md
+-a----        07/03/2026     16:51            191 ROADMAP.md
+-a----        07/03/2026     16:51            284 SECURITY.md
+-a----        08/03/2026     17:15          22450 vt-scanner.ps1
+
+
+PS C:\Users\bbrod\Projets\vt-scanner-cli>
+
+---
+
 ## 💻 Développement
 
 ### Architecture du Script
