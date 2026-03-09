@@ -2,7 +2,7 @@
 
 Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de commande PowerShell.
 
-![Version](https://img.shields.io/badge/version-1.1-blue)
+![Version](https://img.shields.io/badge/version-1.2-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blueviolet)
 ![License](https://img.shields.io/badge/license-Personal%2FEdu-green)
 
@@ -32,6 +32,8 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 
 **VirusTotal Scanner CLI** est un outil en ligne de commande PowerShell permettant d'analyser rapidement des fichiers, dossiers et URLs via l'API VirusTotal v3. Idéal pour les administrateurs système, analystes sécurité et utilisateurs avancés.
 
+**Version 1.2 - Edition Sécurisée** : Stockage chiffré de la clé API, gestion avancée des erreurs, export CSV et interface utilisateur améliorée.
+
 ---
 
 ## ✨ Fonctionnalités
@@ -42,18 +44,33 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 | **2** | Scanner un dossier (récursif, max 10 fichiers) + **Export CSV** |
 | **3** | Scanner une URL (HTTPS recommandé) |
 | **4** | Scanner via hash SHA256 |
-| **5** | Configurer clé API |
+| **5** | Gestion clé API (SecureString) |
+| **6** | Consulter un scan existant |
 | **0** | Quitter |
 
 ### Détails des Fonctionnalités
 
+#### 🔐 Sécurité (v1.2)
+- **SecureString** : Clé API chiffrée et stockée localement
+- **Persistance automatique** : Chargement de la clé au démarrage
+- **Test-ApiKey** : Validation automatique au lancement
+- **Suppression sécurisée** : Option pour effacer la clé sauvegardée
+
+#### 📊 Analyse (v1.1 + v1.2)
 - **Cache VirusTotal** : Vérification automatique avant upload (économie de quota)
 - **Upload Multipart** : Support des fichiers jusqu'à 650 MB
-- **Polling Intelligent** : Attente automatique des résultats d'analyse
+- **Polling Intelligent** : Attente automatique des résultats d'analyse (max 5 min)
 - **Rapports Détaillés** : Affichage des détections par moteur antivirus
-- **Export CSV** : Génération de rapports traçables (v1.1)
-- **Barre de Progression** : Visibilité pendant le scan de dossiers (v1.1)
-- **Gestion d'Erreurs Robuste** : Try/Catch dans la boucle de scan (v1.1)
+- **Export CSV** : Génération de rapports traçables avec timestamp
+- **Barre de Progression** : Visibilité pendant le scan de dossiers
+- **Gestion d'Erreurs Robuste** : Try/Catch dans toutes les fonctions de scan
+- **Détection Quota 403** : Arrêt propre en cas de limite API dépassée
+
+#### 🎯 Validation (v1.2)
+- **Trim() URLs** : Suppression automatique des espaces dans les URLs
+- **Validation Hash** : Vérification des 64 caractères hexadécimaux
+- **Validation Schéma** : Contrôle HTTP/HTTPS obligatoire
+- **BaseUrl Protégée** : `.Trim()` pour éviter les erreurs 400
 
 ---
 
@@ -61,14 +78,16 @@ Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de comman
 
 ```text
 vt-scanner-cli/
-├── ROADMAP.md          # Roadmap
-├── CHANGELOG.md        # Changements
-├── SECURITY.md         # Securité
-├── vt-scanner.ps1      # Script principal (~395 lignes)
 ├── README.md           # Ce fichier
-├── backup_README.md    # Une copie de sauvegarde du README.md
-├── digest.txt          # Documentation technique
-└── .git/               # Dépôt Git
+├── backup_README.md    # Sauvegarde du README.md
+├── CHANGELOG.md        # Historique des versions
+├── ROADMAP.md          # Feuille de route future
+├── SECURITY.md         # Politique de sécurité
+├── vt-scanner.ps1      # Script principal (~667 lignes)
+├── digest.txt          # Documentation technique (gitingest)
+├── .git/               # Dépôt Git
+├── .gitignore          # Fichiers ignorés
+└── .markdownlint.json  # Configuration markdownlint
 ```
 
 ---
@@ -89,7 +108,7 @@ vt-scanner-cli/
 ### Méthode 1 : Cloner le dépôt (Recommandé)
 
 ```powershell
-# Sous Powershell 5.1+
+# Sous PowerShell 5.1+
 git clone https://github.com/valorisa/vt-scanner-cli.git
 cd vt-scanner-cli
 ```
@@ -131,7 +150,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ### Vérifier sa clé API
 
 ```powershell
-# Sous Powershell 5.1+
+# Sous PowerShell 5.1+
 $apiKey = "VOTRE_CLE_API"
 $headers = @{ "x-apikey" = $apiKey }
 Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/users/me" -Headers $headers
@@ -144,22 +163,33 @@ Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/users/me" -Headers $he
 ### Lancement
 
 ```powershell
-# Sous Powershell 5.1+
+# Sous PowerShell 5.1+
 .\vt-scanner.ps1
 ```
 
 ### Menu Principal
 
 ```text
-=== VirusTotal Scanner CLI (PS5.1+) ===
-1. Scanner un fichier (hash + upload optionnel)
-2. Scanner un dossier (recursif, max 10 fichiers)
-3. Scanner une URL (HTTPS recommande)
+========================================================
+    VirusTotal Scanner CLI v1.2 - Edition Securisee
+========================================================
+
+Cle API sauvegardee detectee
+Chargement automatique...
+Cle API valide et operationnelle !
+
+=== VirusTotal Scanner CLI v1.2 ===
+(Edition Securisee)
+
+1. Scanner un fichier
+2. Scanner un dossier
+3. Scanner une URL
 4. Scanner via hash SHA256
-5. Configurer cle API
+5. Gestion Cle API
+6. Consulter un ID de scan existant
 0. Quitter
 
-Choix (0-5):
+Choix (0-6):
 ```
 
 ### Exemples d'Utilisation
@@ -171,7 +201,7 @@ Choix: 1
 Chemin du fichier: C:\Users\bbrod\Downloads\test.exe
 Hash: abc123...
 === Resultat 'test.exe' (cache VT) ===
-Propre (62 analyse)
+Propre (62 analyses)
 ```
 
 #### Scanner un dossier (avec export CSV)
@@ -181,28 +211,31 @@ Choix: 2
 Chemin du dossier: C:\Users\bbrod\Downloads
 [ATTENTION] Scan limité aux 10 premiers fichiers (Quota API gratuit).
 Début du scan de 10 fichiers...
-  [+] fichier1.exe: Propre (62 analyse)
+  [+] fichier1.exe: Propre (62 analyses)
   [-] fichier2.dll: 2/62 detections malveillantes
 
 --- Résumé du scan ---
 FileName     Status              Detections
 --------     ------              ----------
-fichier1.exe Propre (62 analyse) 0
+fichier1.exe Propre (62 analyses) 0
 fichier2.dll 2/62 detections...  2
 
 Souhaitez-vous exporter ces résultats en CSV ?
 Tapez 'o' pour exporter (Entrée pour ignorer): o
-[OK] Rapport exporte : vt_scan_report_20260306_143022.csv
+[OK] Rapport exporte : vt_scan_report_20260308_171600.csv
 ```
 
 #### Scanner une URL
 
 ```text
 Choix: 3
-URL a scanner: https://example.com
-Scan lance. Attente (60s)...
-Resultat 'https://example.com':
-Propre (89 analyse)
+URL a scanner: https://www.google.com
+URL validee : https://www.google.com
+ID Scan: u-xxxxx...
+Scan lance. Attente des resultats (max 5 min)...
+........
+Resultat 'https://www.google.com':
+Propre (89 analyses)
 ```
 
 #### Scanner par hash
@@ -211,7 +244,36 @@ Propre (89 analyse)
 Choix: 4
 SHA256 hash: abc123def456...
 Resultat hash 'abc123...':
-Propre (70 analyse)
+Propre (70 analyses)
+```
+
+#### Gestion de la clé API (v1.2)
+
+```text
+Choix: 5
+
+--- Gestion de la Cle API ---
+
+1. Ajouter/Nouvelle Cle
+2. Charger Cle Sauvegardee
+3. Tester Cle Actuelle
+4. Supprimer Cle Sauvegardee
+0. Retour au menu principal
+
+Choix: 3
+Cle API valide et operationnelle !
+```
+
+#### Consulter un scan existant (v1.2)
+
+```text
+Choix: 6
+
+--- Consulter un scan existant ---
+Entrez l'ID d'analyse VirusTotal: xxxxx...
+Recuperation de l'analyse...
+=== Resultat analyse ===
+Propre (75 analyses)
 ```
 
 ---
@@ -238,6 +300,62 @@ Propre (70 analyse)
 | ----- | -------- |
 | Fichier trop volumineux | Max 650 MB (API VT) |
 | Multipart mal formé | Utiliser `MemoryStream` + `StreamWriter` |
+
+### ⚠️ Gitingest Aborted - Problème d'Encodage
+
+**Problème :** Lors de l'exécution de `gitingest`, l'erreur suivante peut se produire :
+
+```text
+Error: 'utf-8' codec can't decode byte 0xe9 in position 124: invalid continuation byte
+Aborted!
+```
+
+**Cause :** Un ou plusieurs fichiers du dépôt ne sont **pas encodés en UTF-8 sans BOM**. Les caractères accentués français (é, è, ê, à, etc.) sont mal interprétés.
+
+**Solution :**
+
+1. **Ouvrir chaque fichier texte dans Notepad++** :
+   - `vt-scanner.ps1`
+   - `README.md`
+   - `CHANGELOG.md`
+   - `ROADMAP.md`
+   - `SECURITY.md`
+   - `.markdownlint.json`
+
+2. **Menu Encodage** → **Convertir en UTF-8** (⚠️ **PAS** "UTF-8-BOM")
+
+3. **Vérifier en bas de Notepad++** : doit afficher `UTF-8` (sans "-BOM")
+
+4. **Sauvegarder** avec `Ctrl+S`
+
+5. **Relancer gitingest** :
+   ```powershell
+   gitingest
+   ```
+
+**Commande PowerShell pour vérifier l'encodage :**
+
+```powershell
+# Vérifier si un fichier est en UTF-8 sans BOM
+$bytes = [System.IO.File]::ReadAllBytes(".\vt-scanner.ps1")
+if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+    Write-Host "❌ Fichier avec BOM détecté - À corriger !" -ForegroundColor Red
+} else {
+    Write-Host "✅ Fichier UTF-8 sans BOM - OK" -ForegroundColor Green
+}
+```
+
+**Fichiers concernés par l'encodage UTF-8 sans BOM :**
+
+| Fichier | Critique |
+| ------- | -------- |
+| `vt-scanner.ps1` | ✅ Oui (caractères français) |
+| `README.md` | ✅ Oui (caractères français) |
+| `CHANGELOG.md` | ✅ Oui (caractères français) |
+| `ROADMAP.md` | ✅ Oui (caractères français) |
+| `SECURITY.md` | ✅ Oui (caractères français) |
+| `.markdownlint.json` | ✅ Oui (JSON standard) |
+| `.gitignore` | ⚠️ Recommandé |
 
 ### Le script ne se lance pas
 
@@ -365,23 +483,57 @@ git pull
 
 ---
 
+### Vérification Rapide de l'Encodage des Fichiers
+Pour éviter les futurs problèmes d'encodage, exécutez ce script pour vérifier tous les fichiers texte :
+
+```powershell
+# Sous PowerShell 5.1+
+cd C:\Users\bbrod\Projets\vt-scanner-cli
+
+$files = @("vt-scanner.ps1", "README.md", "CHANGELOG.md", "ROADMAP.md", "SECURITY.md", ".gitattributes", ".markdownlint.json")
+
+Write-Host "`n=== Vérification encodage UTF-8 sans BOM ===" -ForegroundColor Cyan
+foreach ($file in $files) {
+    if (Test-Path $file) {
+        $bytes = [System.IO.File]::ReadAllBytes((Join-Path $PWD $file))
+        if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            Write-Host "❌ $file : BOM détecté" -ForegroundColor Red
+        } else {
+            Write-Host "✅ $file : UTF-8 sans BOM" -ForegroundColor Green
+        }
+    }
+}
+```
+
+---
+
 ## 💻 Développement
 
-### Architecture du Script
+### Architecture du Script (v1.2)
 
-| Fonction | Description |
-| -------- | ----------- |
-| `Update-Headers` | Configure les en-têtes API |
-| `Show-Menu` | Affiche le menu principal |
-| `Get-ScanReport` | Récupère les stats d'analyse |
-| `Test-FileMalicious` | Formate le résultat |
-| `Scan-File` | Upload multipart + polling |
-| `Scan-Folder` | Scan récursif limité + export CSV (v1.1) |
-| `Scan-Url` | Encodage base64 URL |
-| `Scan-Hash` | Recherche par hash seul |
-| `Export-ScanResults` | Export des résultats en CSV (v1.1) |
+| Fonction | Description | Version |
+| -------- | ----------- | ------- |
+| `Save-ApiKey` | Sauvegarde chiffrée de la clé API | v1.2 |
+| `Load-ApiKey` | Chargement de la clé chiffrée | v1.2 |
+| `ConvertFrom-Secure` | Conversion SecureString → texte clair | v1.2 |
+| `Update-Headers` | Configure les en-têtes API | v1.0 |
+| `Test-ApiKey` | Validation de la clé API | v1.2 |
+| `Delete-ApiKey` | Suppression de la clé sauvegardée | v1.2 |
+| `Show-Menu` | Affiche le menu principal | v1.0 |
+| `Get-ScanReport` | Récupère les stats d'analyse | v1.0 |
+| `Wait-VTAnalysis` | Polling avec timeout configurable | v1.2 |
+| `Test-FileMalicious` | Formate le résultat | v1.0 |
+| `Scan-File` | Upload multipart + polling | v1.0 |
+| `Scan-Folder` | Scan récursif + export CSV | v1.1 |
+| `Scan-Url` | Scan URL avec validation | v1.0 |
+| `Scan-Hash` | Recherche par hash seul | v1.0 |
+| `Export-ScanResults` | Export des résultats en CSV | v1.1 |
+| `ApiKeyManagement` | Sous-menu gestion clé API | v1.2 |
+| `Check-ExistingScan` | Consulter un scan existant | v1.2 |
 
-### Corrections Appliquées (v1.0 → v1.1)
+**Total :** ~667 lignes (vs ~200 pour v1.0, ~370 pour v1.1)
+
+### Corrections Appliquées (v1.0 → v1.2)
 
 | Problème | Solution | Version |
 | -------- | -------- | ------- |
@@ -392,6 +544,9 @@ git pull
 | Pas d'export CSV | Ajout `Export-ScanResults` | v1.1 |
 | Scan-Folder fragile | Try/Catch + gestion 403 | v1.1 |
 | Pas de progression | Ajout `Write-Progress` | v1.1 |
+| Clé API en clair | SecureString + chiffrement | v1.2 |
+| Pas de validation API | Ajout `Test-ApiKey` | v1.2 |
+| Encodage fichiers | UTF-8 sans BOM | v1.2 |
 
 ---
 
@@ -400,7 +555,7 @@ git pull
 ### Test de connexion API
 
 ```powershell
-# Sous Powershell 5.1+
+# Sous PowerShell 5.1+
 $apiKey = "VOTRE_CLE_API"
 $headers = @{ "x-apikey" = $apiKey }
 Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/users/me" -Headers $headers
@@ -421,7 +576,7 @@ Chemin: C:\chemin\vers\test.txt
 ### Test de scan dossier + export CSV
 
 ```powershell
-# Sous Powershell 5.1+
+# Sous PowerShell 5.1+
 .\vt-scanner.ps1
 Choix: 2
 Chemin: C:\chemin\vers\dossier
@@ -431,10 +586,25 @@ Chemin: C:\chemin\vers\dossier
 ### Test de scan URL
 
 ```powershell
-# Sous Powershell 5.1+
+# Sous PowerShell 5.1+
 .\vt-scanner.ps1
 Choix: 3
 URL: https://example.com
+```
+
+### Test de validation d'encodage
+
+```powershell
+# Vérifier que tous les fichiers sont en UTF-8 sans BOM
+$files = @("vt-scanner.ps1", "README.md", "CHANGELOG.md", "ROADMAP.md", "SECURITY.md")
+foreach ($file in $files) {
+    $bytes = [System.IO.File]::ReadAllBytes(".\$file")
+    if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        Write-Host "❌ $file : BOM détecté" -ForegroundColor Red
+    } else {
+        Write-Host "✅ $file : UTF-8 sans BOM" -ForegroundColor Green
+    }
+}
 ```
 
 ---
@@ -451,10 +621,12 @@ URL: https://example.com
 
 ### Bonnes Pratiques
 
-- Tester toutes les options avant commit
-- Garder la compatibilité PowerShell 5.1+
-- Documenter les nouvelles fonctions
-- Respecter les limites API VirusTotal
+- ✅ Tester toutes les options avant commit
+- ✅ Garder la compatibilité PowerShell 5.1+
+- ✅ Documenter les nouvelles fonctions
+- ✅ Respecter les limites API VirusTotal
+- ✅ **Encoder tous les fichiers en UTF-8 sans BOM** (critique pour gitingest)
+- ✅ Vérifier l'encodage avec Notepad++ avant commit
 
 ---
 
@@ -479,6 +651,7 @@ Ce projet est fourni **tel quel** pour un usage **personnel et éducatif**.
 | **Obtenir une clé API** | [virustotal.com/gui/my-apikey](https://www.virustotal.com/gui/my-apikey) |
 | **Documentation PowerShell** | [docs.microsoft.com/powershell](https://docs.microsoft.com/powershell/) |
 | **Dépôt GitHub** | [github.com/valorisa/vt-scanner-cli](https://github.com/valorisa/vt-scanner-cli) |
+| **Gitingest** | [gitingest.com](https://gitingest.com) |
 
 ---
 
@@ -489,18 +662,42 @@ Pour toute question ou problème :
 1. Consultez la section [Dépannage](#-dépannage)
 2. Ouvrez une issue sur [GitHub](https://github.com/valorisa/vt-scanner-cli/issues)
 3. Vérifiez votre quota API sur [VirusTotal](https://www.virustotal.com/gui/my-apikey)
+4. Vérifiez l'encodage de vos fichiers (UTF-8 sans BOM)
 
 ---
 
 **Développé avec pertinacité par valorisa**
 
-*Version: 1.1 | PowerShell 5.1+ | API VirusTotal v3*
+*Version: 1.2 Secure Edition | PowerShell 5.1+ | API VirusTotal v3*
 
 ---
 
 ## 📝 Notes de Version
 
-### v1.1 (Version Actuelle) - 06 mars 2026
+### v1.2 (Version Actuelle) - 08 mars 2026
+
+#### 🔐 Nouvelles Fonctionnalités
+- ✅ **SecureString** : Clé API chiffrée avec `Export-Clixml`
+- ✅ **Persistance automatique** : Fichier `.vtapikey.secure` dans `%USERPROFILE%`
+- ✅ **Test-ApiKey** : Validation automatique au démarrage
+- ✅ **Delete-ApiKey** : Suppression sécurisée de la clé
+- ✅ **ApiKeyManagement** : Sous-menu de gestion (options 5.1-5.3)
+- ✅ **Check-ExistingScan** : Consulter un scan par ID (option 6)
+- ✅ **Wait-VTAnalysis** : Timeout configurable (max 5 min)
+- ✅ **Validation renforcée** : Hash 64 caractères, schéma HTTP/HTTPS
+
+#### 🐛 Corrections
+- ✅ **Encodage UTF-8 sans BOM** : Tous les fichiers convertis
+- ✅ **BaseUrl .Trim()** : Protection contre les espaces accidentels
+- ✅ **Test-ApiKey Response** : Vérification `[System.Net.WebException]` avant accès
+- ✅ **gitingest aborted** : Résolu avec encodage UTF-8 correct
+
+#### 📊 Statistiques
+- **Lignes de code** : ~667 (vs ~370 en v1.1)
+- **Fonctions** : 17 (vs 9 en v1.1)
+- **Fichiers documentés** : 7 (tous en UTF-8 sans BOM)
+
+### v1.1 (Version Précédente) - 06 mars 2026
 
 - ✅ **NOUVEAU** : Export CSV des résultats de scan (option 2)
 - ✅ **NOUVEAU** : Barre de progression pendant le scan de dossiers
@@ -510,7 +707,7 @@ Pour toute question ou problème :
 - ✅ **CORRECTION** : Trim() sur les URLs utilisateur
 - ✅ **CORRECTION** : Nettoyage contenu markdownlint.json du script
 
-### v1.0 (Version Précédente) - 05 mars 2026
+### v1.0 (Version Initiale) - 05 mars 2026
 
 - ✅ Scanner de fichiers avec cache VT
 - ✅ Upload multipart corrigé
@@ -522,23 +719,52 @@ Pour toute question ou problème :
 
 ---
 
-*README généré pour vt-scanner-cli - Dernière mise à jour : le 07 mars 2026*
+*README généré pour vt-scanner-cli - Dernière mise à jour : le 08 mars 2026*
 
 ---
 
-## 📊 Résumé des Modifications Apportées
+## 📊 Résumé des Modifications par Version
 
-| Élément | v1.0 | v1.1 |
-| ------- | ---- | ---- |
-| **Badge Version** | `1.0-blue` | `1.1-blue` |
-| **Option 2** | Scan dossier | Scan dossier + **Export CSV** |
-| **Détails Fonctionnalités** | 4 points | **7 points** (+3 nouveaux) |
-| **Structure** | ~200 lignes | **~370 lignes** |
-| **Exemple Scan Dossier** | Basique | **Avec export CSV** |
-| **Architecture** | 8 fonctions | **9 fonctions** (+Export-ScanResults) |
-| **Corrections** | 4 (v1.0) | **7** (v1.0 + v1.1) |
-| **Notes de Version** | v1.0 uniquement | **v1.0 + v1.1** |
-| **Date** | 05 mars 2026 | **06 mars 2026** |
-| **URLs** | Espaces superflus | **Nettoyées** (markdownlint) |
+| Élément | v1.0 | v1.1 | v1.2 |
+| ------- | ---- | ---- | ---- |
+| **Badge Version** | `1.0-blue` | `1.1-blue` | `1.2-blue` |
+| **Lignes de code** | ~200 | ~370 | **~667** |
+| **Fonctions** | 8 | 9 | **17** |
+| **Export CSV** | ❌ | ✅ | ✅ |
+| **Barre progression** | ❌ | ✅ | ✅ |
+| **Détection quota 403** | ❌ | ✅ | ✅ |
+| **SecureString API** | ❌ | ❌ | **✅** |
+| **Persistance clé** | ❌ | ❌ | **✅** |
+| **Test-ApiKey** | ❌ | ❌ | **✅** |
+| **Check-ExistingScan** | ❌ | ❌ | **✅** |
+| **Encodage UTF-8** | ⚠️ | ⚠️ | **✅** |
+| **Notes de version** | v1.0 | v1.0 + v1.1 | **v1.0 + v1.1 + v1.2** |
 
 ---
+
+## 📋 Instructions pour Appliquer
+
+1. **Ouvrir Notepad++**
+2. **Copier-coller** tout le contenu ci-dessus
+3. **Menu Encodage** → **Convertir en UTF-8** (⚠️ **PAS** "UTF-8-BOM")
+4. **Sauvegarder** sous `README.md` dans `C:\Users\bbrod\Projets\vt-scanner-cli\`
+5. **Vérifier** en bas de Notepad++ : doit afficher `UTF-8` (sans BOM)
+
+---
+
+## ✅ Points Clés Ajoutés
+
+| Section | Contenu |
+| ------- | ------- |
+| **Version badge** | Mis à jour `1.2-blue` |
+| **Fonctionnalités** | Ajout options 5 (Gestion API) et 6 (Scan existant) |
+| **Architecture** | 17 fonctions documentées avec version |
+| **Dépannage** | Section complète sur gitingest + UTF-8 |
+| **Tests** | Script de validation d'encodage ajouté |
+| **Notes de version** | v1.2 détaillée avec statistiques |
+| **Tableau comparatif** | v1.0 → v1.1 → v1.2 |
+| **Bonnes pratiques** | Encodage UTF-8 sans BOM mentionné |
+
+---
+
+**Votre README.md est maintenant complet et à jour avec la version 1.2 !** 🚀
