@@ -483,6 +483,30 @@ git pull
 
 ---
 
+### Vérification Rapide de l'Encodage des Fichiers
+Pour éviter les futurs problèmes d'encodage, exécutez ce script pour vérifier tous les fichiers texte :
+
+```powershell
+# Sous PowerShell 5.1+
+cd C:\Users\bbrod\Projets\vt-scanner-cli
+
+$files = @("vt-scanner.ps1", "README.md", "CHANGELOG.md", "ROADMAP.md", "SECURITY.md", ".gitattributes", ".markdownlint.json")
+
+Write-Host "`n=== Vérification encodage UTF-8 sans BOM ===" -ForegroundColor Cyan
+foreach ($file in $files) {
+    if (Test-Path $file) {
+        $bytes = [System.IO.File]::ReadAllBytes((Join-Path $PWD $file))
+        if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            Write-Host "❌ $file : BOM détecté" -ForegroundColor Red
+        } else {
+            Write-Host "✅ $file : UTF-8 sans BOM" -ForegroundColor Green
+        }
+    }
+}
+```
+
+---
+
 ## 💻 Développement
 
 ### Architecture du Script (v1.2)
