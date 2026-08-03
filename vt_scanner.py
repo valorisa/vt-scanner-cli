@@ -15,14 +15,37 @@ import hashlib
 import locale
 import os
 import re
-import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 import requests
+
+# cryptography and keyring are required in requirements.txt, but import them
+# in a tolerant manner to avoid hard ImportError at module import time on
+# partially provisioned environments (dev machines, CI edge cases).
+try:
+    from cryptography.fernet import Fernet, InvalidToken
+except ImportError:
+    Fernet = None
+    InvalidToken = None
+
+try:
+    import keyring
+    from keyring.errors import KeyringError
+except ImportError:
+    keyring = None
+
+    class KeyringError(Exception):
+        """Fallback KeyringError used when `keyring` is not installed."""
+
+# Exceptions to catch for Fernet decrypt/load operations.
+FERNET_DECRYPT_EXCEPTIONS = (OSError, ValueError, RuntimeError)  # pylint: disable=invalid-name
+if InvalidToken is not None:
+    FERNET_DECRYPT_EXCEPTIONS += (InvalidToken,)
 
 
 # -----------------------------
@@ -96,10 +119,12 @@ def clear_screen() -> None:
 
 
 def cprint(text: str, color: str = "") -> None:
+    """Print text with optional color reset."""
     print(f"{color}{text}{C.RESET}")
 
 
 def prompt(text: str) -> str:
+    """Prompt user and return stripped input (returns empty string on EOF)."""
     # input() peut lever EOFError; on normalise.
     try:
         return input(text).strip()
@@ -108,6 +133,7 @@ def prompt(text: str) -> str:
 
 
 def ensure_config_dir() -> None:
+    """Ensure configuration directory exists with restrictive permissions."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     if os.name != "nt":
         try:
@@ -118,17 +144,19 @@ def ensure_config_dir() -> None:
 
 
 def get_csv_delimiter() -> str:
+    """Return a CSV delimiter adapted to current locale (',' or ';')."""
     # Approche proche de PowerShell Export-Csv -UseCulture:
     # si décimale ',', le séparateur liste est souvent ';' en FR/Europe.
     try:
         locale.setlocale(locale.LC_ALL, "")
         dec = locale.localeconv().get("decimal_point", ".")
         return ";" if dec == "," else ","
-    except Exception:
+    except locale.Error:
         return ","
 
 
 def compute_sha256(file_path: Path) -> str:
+    """Compute and return the SHA256 hex digest of a file (lowercase)."""
     h = hashlib.sha256()
     with file_path.open("rb") as f:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
@@ -137,34 +165,38 @@ def compute_sha256(file_path: Path) -> str:
 
 
 def validate_sha256(s: str) -> bool:
+    """Validate that a string is exactly a 64-hex-character SHA256."""
     return bool(SHA256_RE.fullmatch(s.strip()))
 
 
 def normalize_and_validate_url(s: str) -> Optional[str]:
+    """Normalize and validate an HTTP/HTTPS URL. Return canonical URL or None."""
     s = s.strip()
     if not s:
         return None
     if not s.startswith(("http://", "https://")):
         s = f"https://{s}"
-    try:
-        from urllib.parse import urlparse
-
-        u = urlparse(s)
-        if u.scheme not in ("http", "https"):
-            return None
-        if not u.netloc:
-            return None
-        return s
-    except Exception:
+    # urlparse does not raise on normal input; validate components explicitly.
+    u = urlparse(s)
+    if u.scheme not in ("http", "https"):
         return None
+    if not u.netloc:
+        return None
+    return s
 
 
 # -----------------------------
 # Stockage sécurisé clé API
 # -----------------------------
 def _fernet_load_or_create_key() -> "Fernet":
+    """Load or create a Fernet key file and return a Fernet instance.
+
+    Raises:
+        RuntimeError: if the `cryptography` package is not installed.
+    """
     ensure_config_dir()
-    from cryptography.fernet import Fernet  # type: ignore
+    if Fernet is None:
+        raise RuntimeError("cryptography package is required for Fernet operations")
 
     if not FERNET_KEY_PATH.exists():
         key = Fernet.generate_key()
@@ -191,7 +223,7 @@ def _save_api_key_fernet(api_key: str) -> bool:
             except OSError:
                 pass
         return True
-    except (OSError, ValueError) as e:
+    except FERNET_DECRYPT_EXCEPTIONS as e:
         cprint(f"Impossible de sauvegarder la clé API (fallback Fernet) : {e}", C.YELLOW)
         return False
 
@@ -202,8 +234,9 @@ def _load_api_key_fernet() -> Optional[str]:
             return None
         f = _fernet_load_or_create_key()
         token = FERNET_APIKEY_PATH.read_bytes()
+        # decrypt() raises InvalidToken when the encrypted payload is invalid.
         return f.decrypt(token).decode("utf-8")
-    except (OSError, ValueError) as e:
+    except FERNET_DECRYPT_EXCEPTIONS as e:
         cprint(f"Impossible de charger la clé API (fallback Fernet) : {e}", C.YELLOW)
         return None
 
@@ -219,47 +252,46 @@ def _delete_api_key_fernet() -> bool:
 
 
 def save_api_key(api_key: str) -> bool:
+    """Save API key using keyring primary backend, fallback to Fernet file storage."""
     api_key = api_key.strip()
     if not api_key:
         return False
 
-    # Primaire: keyring
-    try:
-        import keyring  # type: ignore
+    # If keyring is not available, directly use Fernet fallback (best-effort).
+    if keyring is None:
+        return _save_api_key_fernet(api_key)
 
+    try:
         keyring.set_password(API_KEYRING_SERVICE, API_KEYRING_USERNAME, api_key)
         return True
-    except (ImportError, RuntimeError) as e:
-        cprint(f"[INFO] keyring indisponible ({e}). Fallback Fernet activé.", C.GRAY)
-        return _save_api_key_fernet(api_key)
-    except Exception as e:
-        # certains backends keyring lèvent des exceptions spécifiques; on reste explicite mais safe.
+    except (KeyringError, RuntimeError) as e:
         cprint(f"[INFO] keyring a échoué ({type(e).__name__}). Fallback Fernet activé.", C.GRAY)
         return _save_api_key_fernet(api_key)
 
 
 def load_api_key() -> Optional[str]:
-    try:
-        import keyring  # type: ignore
+    """Load API key from keyring or fallback to Fernet storage."""
+    # If keyring is not available, use Fernet fallback.
+    if keyring is None:
+        return _load_api_key_fernet()
 
+    try:
         k = keyring.get_password(API_KEYRING_SERVICE, API_KEYRING_USERNAME)
         if k:
             return k.strip()
         return None
-    except (ImportError, RuntimeError):
-        return _load_api_key_fernet()
-    except Exception:
+    except (KeyringError, RuntimeError):
         return _load_api_key_fernet()
 
 
 def delete_api_key() -> bool:
+    """Delete API key from keyring and local Fernet fallback (best-effort)."""
     ok = True
-    try:
-        import keyring  # type: ignore
-
-        keyring.delete_password(API_KEYRING_SERVICE, API_KEYRING_USERNAME)
-    except Exception:
-        ok = ok and True  # best-effort
+    if keyring is not None:
+        try:
+            keyring.delete_password(API_KEYRING_SERVICE, API_KEYRING_USERNAME)
+        except (KeyringError, RuntimeError):
+            ok = ok and True  # best-effort if keyring backend fails
     ok = ok and _delete_api_key_fernet()
     return ok
 
