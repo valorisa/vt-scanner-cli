@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vt-scanner-cli"
+version = "1.3.0"
+description = "VirusTotal Scanner CLI - Python Edition"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "valorisa"}
+]
+license = {text = "Personal/Edu"}
+dependencies = [
+    "requests>=2.31.0",
+    "keyring>=24.3.0",
+    "cryptography>=42.0.0",
+    "colorama>=0.4.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pylint>=3.0.0",
+]
+
+[project.scripts]
+vt-scanner = "vt_scanner:main"
+
+[tool.setuptools]
+py-modules = ["vt_scanner"]
