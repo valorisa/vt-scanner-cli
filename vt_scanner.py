@@ -835,8 +835,8 @@ def api_key_management(session: requests.Session) -> None:
 # -----------------------------
 def show_menu() -> None:
     clear_screen()
-    cprint("=== VirusTotal Scanner CLI v1.2 ===", C.CYAN)
-    cprint("(Edition Securisee)", C.GRAY)
+    cprint("=== VirusTotal Scanner CLI v1.3 ===", C.CYAN)
+    cprint("(Édition Consolidée)", C.GRAY)
     print()
     cprint("1. Scanner un fichier", C.GREEN)
     cprint("2. Scanner un dossier", C.GREEN)
