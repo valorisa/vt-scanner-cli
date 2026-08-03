@@ -1,6 +1,6 @@
 # filepath: vt_scanner.py
 # ============================================================================
-# VirusTotal Scanner CLI - VERSION 1.2.0 (Python 3.10+ Secure Edition)
+# VirusTotal Scanner CLI - VERSION 1.3.0 (Python 3.10+ Consolidated Edition)
 # ============================================================================
 # Auteur: valorisa
 # Description: Scan fichiers/dossiers/URLs via l'API VirusTotal v3 en CLI.
