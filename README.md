@@ -2,7 +2,7 @@
 
 Scanner de fichiers, dossiers et URLs via l'API VirusTotal v3 en ligne de commande PowerShell. Fonctionne pleinement aussi depuis macOS et Linux via la version du script en python '**vt_scanner.py**'.
 
-![Version](https://img.shields.io/badge/version-1.2-blue)
+![Version](https://img.shields.io/badge/version-1.3-blue)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blueviolet)
 ![License](https://img.shields.io/badge/license-Personal%2FEdu-green)
 
